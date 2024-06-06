@@ -6,85 +6,139 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class Price_Catalog_API {
 
-	public function __construct() {
-		add_action( 'rest_api_init', array( $this, 'register_routes' ) );
-	}
+    public function __construct() {
+        add_action( 'rest_api_init', array( $this, 'register_routes' ) );
+    }
 
-	public function register_routes() {
-		register_rest_route( 'price-catalog/v1', '/price', array(
-			'methods' => 'POST',
-			'callback' => array( $this, 'create_price' ),
-			'permission_callback' => function() {
-				return current_user_can( 'manage_options' );
-			},
-		) );
+    public function register_routes() {
+        register_rest_route( 'price-catalog/v1', '/price', array(
+            'methods' => 'POST',
+            'callback' => array( $this, 'create_price' ),
+            'permission_callback' => function() {
+                return current_user_can( 'manage_options' );
+            },
+        ) );
 
-		register_rest_route( 'price-catalog/v1', '/price/(?P<id>\d+)', array(
-			'methods' => 'GET',
-			'callback' => array( $this, 'get_price' ),
-			'permission_callback' => function() {
-				return current_user_can( 'manage_options' );
-			},
-		) );
+        register_rest_route( 'price-catalog/v1', '/price/(?P<id>\d+)', array(
+            'methods' => 'GET',
+            'callback' => array( $this, 'get_price' ),
+            'permission_callback' => function() {
+                return current_user_can( 'manage_options' );
+            },
+        ) );
 
-		register_rest_route( 'price-catalog/v1', '/price/(?P<id>\d+)', array(
-			'methods' => 'DELETE',
-			'callback' => array( $this, 'delete_price' ),
-			'permission_callback' => function() {
-				return current_user_can( 'manage_options' );
-			},
-		) );
-	}
+        register_rest_route( 'price-catalog/v1', '/price/(?P<id>\d+)', array(
+            'methods' => 'DELETE',
+            'callback' => array( $this, 'delete_price' ),
+            'permission_callback' => function() {
+                return current_user_can( 'manage_options' );
+            },
+        ) );
 
-	public function create_price( $request ) {
-		global $wpdb;
-		$table_name = $wpdb->prefix . 'customer_specific_prices';
+        register_rest_route( 'price-catalog/v1', '/prices/batch', array(
+            'methods' => 'POST',
+            'callback' => array( $this, 'batch_update_prices' ),
+            'permission_callback' => function() {
+                return current_user_can( 'manage_options' );
+            },
+        ) );
+    }
 
-		$user_id = $request['user_id'];
-		$product_id = $request['product_id'];
-		$price = $request['price'];
+    public function create_price( $request ) {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'customer_specific_prices';
 
-		$wpdb->replace( $table_name, array(
-			'user_id' => $user_id,
-			'product_id' => $product_id,
-			'price' => $price,
-		), array(
-			'%d',
-			'%d',
-			'%f',
-		) );
+        $user_id = $request['user_id'];
+        $product_id = $request['product_id'];
+        $price = $request['price'];
 
-		return new WP_REST_Response( 'Price added/updated', 200 );
-	}
+        $wpdb->replace( $table_name, array(
+            'user_id' => $user_id,
+            'product_id' => $product_id,
+            'price' => $price,
+        ), array(
+            '%d',
+            '%d',
+            '%f',
+        ) );
 
-	public function get_price( $request ) {
-		global $wpdb;
-		$table_name = $wpdb->prefix . 'customer_specific_prices';
-		$id = $request['id'];
+        return new WP_REST_Response( 'Price added/updated', 200 );
+    }
 
-		$query = $wpdb->prepare( "SELECT * FROM $table_name WHERE id = %d", $id );
-		$result = $wpdb->get_row( $query );
+    public function get_price( $request ) {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'customer_specific_prices';
+        $id = $request['id'];
 
-		if ( $result ) {
-			return new WP_REST_Response( $result, 200 );
-		}
+        $query = $wpdb->prepare( "SELECT * FROM $table_name WHERE id = %d", $id );
+        $result = $wpdb->get_row( $query );
 
-		return new WP_Error( 'no_price', 'Price not found', array( 'status' => 404 ) );
-	}
+        if ( $result ) {
+            return new WP_REST_Response( $result, 200 );
+        }
 
-	public function delete_price( $request ) {
-		global $wpdb;
-		$table_name = $wpdb->prefix . 'customer_specific_prices';
-		$id = $request['id'];
+        return new WP_Error( 'no_price', 'Price not found', array( 'status' => 404 ) );
+    }
 
-		$deleted = $wpdb->delete( $table_name, array( 'id' => $id ), array( '%d' ) );
+    public function delete_price( $request ) {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'customer_specific_prices';
+        $id = $request['id'];
 
-		if ( $deleted ) {
-			return new WP_REST_Response( 'Price deleted', 200 );
-		}
+        $deleted = $wpdb->delete( $table_name, array( 'id' => $id ), array( '%d' ) );
 
-		return new WP_Error( 'no_price', 'Price not found', array( 'status' => 404 ) );
-	}
+        if ( $deleted ) {
+            return new WP_REST_Response( 'Price deleted', 200 );
+        }
+
+        return new WP_Error( 'no_price', 'Price not found', array( 'status' => 404 ) );
+    }
+
+    public function batch_update_prices( $request ) {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'customer_specific_prices';
+
+        $prices = $request['prices'];
+        $responses = array();
+
+        foreach ( $prices as $price_data ) {
+            $user_id = $price_data['user_id'];
+            $product_id = $price_data['product_id'];
+            $price = $price_data['price'];
+            $operation = isset( $price_data['operation'] ) ? $price_data['operation'] : 'update';
+
+            if ( 'delete' === $operation ) {
+                $deleted = $wpdb->delete( $table_name, array(
+                    'user_id' => $user_id,
+                    'product_id' => $product_id,
+                ), array(
+                    '%d',
+                    '%d',
+                ) );
+
+                if ( $deleted ) {
+                    $responses[] = array( 'status' => 'deleted', 'user_id' => $user_id, 'product_id' => $product_id );
+                } else {
+                    $responses[] = new WP_Error( 'delete_failed', 'Failed to delete price', array( 'status' => 500 ) );
+                }
+            } else {
+                $wpdb->replace( $table_name, array(
+                    'user_id' => $user_id,
+                    'product_id' => $product_id,
+                    'price' => $price,
+                ), array(
+                    '%d',
+                    '%d',
+                    '%f',
+                ) );
+
+                $responses[] = array( 'status' => 'updated', 'user_id' => $user_id, 'product_id' => $product_id, 'price' => $price );
+            }
+        }
+
+        return new WP_REST_Response( $responses, 200 );
+    }
 }
 
 new Price_Catalog_API();
+
