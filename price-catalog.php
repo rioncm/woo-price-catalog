@@ -2,7 +2,7 @@
 /*
 Plugin Name: Price Catalog
 Description: Display and transact business with predetermined customer-specific pricing. All pricing methods are "fixed".
-Version: 1.0
+Version: 1.1
 Author: Rion Morgenstern
 */
 
