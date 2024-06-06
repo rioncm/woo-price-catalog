@@ -17,11 +17,11 @@ The Price Catalog plugin for WooCommerce allows you to manage and display custom
 price-catalog/
 ├── price-catalog.php
 ├── includes/
-│   ├── class-price-catalog.php
-│   └── class-price-catalog-api.php
+│ ├── class-price-catalog.php
+│ └── class-price-catalog-api.php
 ├── assets/
-│   ├── js/
-│   ├── css/
+│ ├── js/
+│ ├── css/
 ├── languages/
 
 ## Installation
