@@ -32,6 +32,12 @@ price-catalog/
 
 See overview.md for full documentation
 
+## TODOs
+
+- add validation against the WooCommerce products for POST
+- add admin area user interface to view entries
+- add more TODOs
+
 
 ### LICENSE 
 
