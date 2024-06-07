@@ -1,0 +1,74 @@
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore OS generated files
+*.swp
+*.swo
+*.bak
+*.tmp
+
+# Ignore sensitive and configuration files
+wp-config.php
+.htaccess
+
+# Ignore PHPStorm/IDEA project files
+.idea/
+*.iml
+
+# Ignore Composer dependencies
+/vendor/
+
+# Ignore node.js dependencies
+/node_modules/
+
+# Ignore log files and databases
+*.log
+*.sql
+*.sqlite
+
+# Ignore WordPress core
+/wp-admin/
+/wp-includes/
+/index.php
+/license.txt
+/readme.html
+/wp-activate.php
+/wp-blog-header.php
+/wp-comments-post.php
+/wp-config-sample.php
+/wp-cron.php
+/wp-links-opml.php
+/wp-load.php
+/wp-login.php
+/wp-mail.php
+/wp-settings.php
+/wp-signup.php
+/wp-trackback.php
+/xmlrpc.php
+
+# Ignore wp-content except for our plugin
+!wp-content/
+wp-content/*
+!wp-content/plugins/
+wp-content/plugins/*
+!wp-content/plugins/price-catalog/
+
+# Ignore uploads except for our plugin's assets
+!wp-content/uploads/
+wp-content/uploads/*
+!wp-content/uploads/price-catalog/
+
+# Ignore transient files
+error_log
+debug.log
+.env
+
+# Ignore npm debug files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Ignore build files
+dist/
+build/
