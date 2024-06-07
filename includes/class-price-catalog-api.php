@@ -1,7 +1,7 @@
 <?php
 
 if ( ! defined( 'ABSPATH' ) ) {
-	exit; // Exit if accessed directly.
+    exit; // Exit if accessed directly.
 }
 
 class Price_Catalog_API {
@@ -42,6 +42,14 @@ class Price_Catalog_API {
                 return current_user_can( 'manage_options' );
             },
         ) );
+
+        register_rest_route( 'price-catalog/v1', '/prices', array(
+            'methods' => 'GET',
+            'callback' => array( $this, 'get_prices' ),
+            'permission_callback' => function() {
+                return current_user_can( 'manage_options' );
+            },
+        ) );
     }
 
     public function create_price( $request ) {
@@ -49,16 +57,22 @@ class Price_Catalog_API {
         $table_name = $wpdb->prefix . 'customer_specific_prices';
 
         $user_id = $request['user_id'];
+        $username = $request['username'];
         $product_id = $request['product_id'];
+        $sku = $request['sku'];
         $price = $request['price'];
 
         $wpdb->replace( $table_name, array(
             'user_id' => $user_id,
+            'username' => $username,
             'product_id' => $product_id,
+            'sku' => $sku,
             'price' => $price,
         ), array(
             '%d',
+            '%s',
             '%d',
+            '%s',
             '%f',
         ) );
 
@@ -103,7 +117,9 @@ class Price_Catalog_API {
 
         foreach ( $prices as $price_data ) {
             $user_id = $price_data['user_id'];
+            $username = $price_data['username'];
             $product_id = $price_data['product_id'];
+            $sku = $price_data['sku'];
             $price = $price_data['price'];
             $operation = isset( $price_data['operation'] ) ? $price_data['operation'] : 'update';
 
@@ -124,11 +140,15 @@ class Price_Catalog_API {
             } else {
                 $wpdb->replace( $table_name, array(
                     'user_id' => $user_id,
+                    'username' => $username,
                     'product_id' => $product_id,
+                    'sku' => $sku,
                     'price' => $price,
                 ), array(
                     '%d',
+                    '%s',
                     '%d',
+                    '%s',
                     '%f',
                 ) );
 
@@ -138,7 +158,30 @@ class Price_Catalog_API {
 
         return new WP_REST_Response( $responses, 200 );
     }
+
+    public function get_prices( $request ) {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'customer_specific_prices';
+
+        $user_id = $request->get_param('user_id');
+        $username = $request->get_param('username');
+
+        if ( $user_id ) {
+            $query = $wpdb->prepare( "SELECT * FROM $table_name WHERE user_id = %d", $user_id );
+        } elseif ( $username ) {
+            $query = $wpdb->prepare( "SELECT * FROM $table_name WHERE username = %s", $username );
+        } else {
+            return new WP_Error( 'invalid_request', 'You must provide a user_id or username', array( 'status' => 400 ) );
+        }
+
+        $results = $wpdb->get_results( $query );
+
+        if ( $results ) {
+            return new WP_REST_Response( $results, 200 );
+        }
+
+        return new WP_Error( 'no_prices', 'No prices found', array( 'status' => 404 ) );
+    }
 }
 
 new Price_Catalog_API();
-

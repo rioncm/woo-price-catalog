@@ -49,21 +49,24 @@ class Price_Catalog {
 	public static function activate() {
 		global $wpdb;
 		$table_name = $wpdb->prefix . 'customer_specific_prices';
-
+	
 		$charset_collate = $wpdb->get_charset_collate();
-
+	
 		$sql = "CREATE TABLE $table_name (
 			id mediumint(9) NOT NULL AUTO_INCREMENT,
 			user_id bigint(20) NOT NULL,
+			username varchar(60) NOT NULL,
 			product_id bigint(20) NOT NULL,
+			sku varchar(100) NOT NULL,
 			price decimal(10,2) NOT NULL,
 			PRIMARY KEY  (id),
 			UNIQUE KEY user_product (user_id, product_id)
 		) $charset_collate;";
-
+	
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		dbDelta( $sql );
 	}
+	
 
 	public static function deactivate() {
 		// Optionally, drop the table on deactivation
